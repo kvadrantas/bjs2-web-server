@@ -1,7 +1,7 @@
 import * as net from "net";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { readdir } from 'fs/promises';
+import { readdir } from 'fs/promises';    // or just fs.readdir
 
 // console.log('----------------\n', path);
 const WEB = "web";
@@ -29,17 +29,17 @@ function readHeaders(socket) {
     });
   });
 }
+//-------------------------------------------------------
 
 async function handler(socket) {
   try {
     const data = await readHeaders(socket);
-    // console.log(data);
+    // console.log('HEADERS ', data);
     const lines = data.split("\r\n");
-    // console.log(lines[0]);
+    // console.log('LINE0 ', lines[0]);
     const [, resource] = lines[0].split(" ");
-    // console.log(resource);
+    // console.log('RESOURCE ', resource);
     const f = path.join(WEB, resource);
-    
 
     if ((await fs.stat(f)).isDirectory()) {
       console.log(`Sio katalogo "${f}" turinys:`);
@@ -60,7 +60,7 @@ async function handler(socket) {
     } else if ((await fs.stat(f)).isFile()) {
       let res = "";
       try {
-  
+
         const response = await fs.readFile(f, {
           encoding: "utf8"
         });
@@ -72,34 +72,21 @@ async function handler(socket) {
         res += "HTTP/1.1 404 Not Found\r\n";
         res += "\r\n";
       }
-      // console.log(res);
-    
-      // let res = "HTTP/1.1 404 Not found\r\n";
-      // res += "<html>\r\n";
-      // res += "<body>\r\n";
-      // res += "<h1>Hello World</h1>\r\n";
-      // res += "</body>\r\n";
-      // res += "</html>\r\n";
       socket.write(res, "utf8");
     }
-
-
-
-
   } catch (err) {
-    // console.log('FROM ERROR:', fsPromises.readdir(path));
-    console.log("Klaida", err);
-    let res = "HTTP/1.1 400 Bad Request\r\n";
-    res += "\r\n";
-    res += 'NERA TOKIO FAILO AR KATALOGO, ZIUREK KA RASAI!'
-    socket.write(res, "utf8");
-} finally {
-    socket.end();
+      // console.log('FROM ERROR:', fsPromises.readdir(path));
+      console.log("Klaida", err);
+      let res = "HTTP/1.1 400 Bad Request\r\n";
+      res += "\r\n";
+      res += 'NERA TOKIO FAILO AR KATALOGO, ZIUREK KA RASAI!'
+      socket.write(res, "utf8");
+  } finally {
+      socket.end();
   }
 }
 
 const srv = net.createServer(handler);
-
 srv.listen(PORT);
 console.log("Server started");
 
