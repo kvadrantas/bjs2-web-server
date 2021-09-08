@@ -1,3 +1,6 @@
+// Soketas yra kanalas, per kuri ateis uzklausos is narsykles. Duomenys vaiksto tam tikro dydzio paketais.
+// Jei siunciam dideli informacijos kieki
+
 import * as net from "net";
 import * as path from "path";
 import * as fs from "fs/promises";
@@ -9,9 +12,11 @@ const PORT = 3000;
 
 function readHeaders(socket) {
   return new Promise((resolve, reject) => {
+    // persiskaitom pirma eilute ir tik hederius. kitaips sakant skaitom iki pirmos tuscios eilutes, o tai ir yra headeriai
     let res = "";
     socket.setEncoding("utf8");
     socket.on("data", (data) => {
+      // gaunam visa informacija pakeitais ir juos sumuojam i res
       res += data;
       const lines = data.split("\r\n");
       for (const line of lines) {
@@ -21,6 +26,7 @@ function readHeaders(socket) {
         }
       }
     });
+    // jeigu ivyko eventas end vadinasi daugiau paketu nebeateis
     socket.on("end", () => {
       resolve(res);
     });
@@ -37,9 +43,10 @@ async function handler(socket) {
     // console.log('HEADERS ', data);
     const lines = data.split("\r\n");
     // console.log('LINE0 ', lines[0]);
-    const [, resource] = lines[0].split(" ");
-    // console.log('RESOURCE ', resource);
+    let [, resource] = lines[0].split(" ");
     const f = path.join(WEB, resource);
+    resource += resource.endsWith('/') ? '' : '/';
+    console.log('RESOURCE ', resource);
 
     if ((await fs.stat(f)).isDirectory()) {
       console.log(`Sio katalogo "${f}" turinys:`);
@@ -50,11 +57,17 @@ async function handler(socket) {
       for (const file of files) {
         fileType = (await fs.stat(f + '/' + file)).isFile() ? '(Failas)' : '(Katalogas)';
         console.log(`${file} ${fileType}`);
-        response += `${file} ${fileType}\n`;
+
+        response += `<li><a href="${resource + file}">${file}</a>&nbsp;&nbsp;&nbsp; <span style='font-size: 0.7em'>${fileType}</span></li>\n`;
       }
       res += "HTTP/1.1 200 OK\r\n";
       res += "\r\n";
+      res += '<html>\n';
+      res += '<body>\n';
+      res += `<b>Katalogo "${f}" turinys:</b>`;
       res += response;
+      res += '<body>\n';
+      res += '</body>\n';
       socket.write(res, "utf8");
       console.log('------------');
     } else if ((await fs.stat(f)).isFile()) {
