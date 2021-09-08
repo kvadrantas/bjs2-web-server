@@ -64,6 +64,7 @@ async function handler(socket) {
       res += "\r\n";
       res += '<html>\n';
       res += '<body>\n';
+      res += `<a style = "font-size: 1.5em; text-decoration: none; color: blue;" href = "${resource + ".."}">..</a><br><br>`;
       res += `<b>Katalogo "${f}" turinys:</b>`;
       res += response;
       res += '<body>\n';
@@ -92,7 +93,7 @@ async function handler(socket) {
       console.log("Klaida", err);
       let res = "HTTP/1.1 400 Bad Request\r\n";
       res += "\r\n";
-      res += 'NERA TOKIO FAILO AR KATALOGO, ZIUREK KA RASAI!'
+      res += 'NERA TOKIO FAILO AR KATALOGO!'
       socket.write(res, "utf8");
   } finally {
       socket.end();
